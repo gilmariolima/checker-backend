@@ -2,13 +2,16 @@ from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 import io, re, pdfplumber
-from datetime import datetime, date   # ✅ <-- ADICIONE ESTA LINHA
+from datetime import datetime, date   # ✅ <-- ADICIONADO
 from difflib import SequenceMatcher
 import unicodedata
-from typing import List, Dict, Any    # ✅ para os tipos usados nas funções
+from typing import List, Dict, Any    # ✅ tipos usados nas funções
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
-
-
+# ==========================================================
+# 🚀 Configuração principal
+# ==========================================================
 app = FastAPI()
 
 app.add_middleware(
@@ -17,6 +20,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ==========================================================
+# 🌐 Servir o Frontend (HTML, CSS, JS e ícone)
+# ==========================================================
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
+
+@app.get("/")
+def home():
+    return FileResponse("frontend/leitor-extratos.html")
 
 
 # ==========================================================
@@ -41,6 +53,7 @@ def try_parse_date(s: str) -> date | None:
         except Exception:
             pass
     return None
+
 
 def filter_items_by_date(items: List[Dict[str, Any]], selected: date) -> List[Dict[str, Any]]:
     """Filtra lista de dicionários onde exista algum campo de data que bata com selected."""
@@ -71,6 +84,7 @@ def filter_items_by_date(items: List[Dict[str, Any]], selected: date) -> List[Di
 # ==========================================================
 # 🔹 Função auxiliar para parsear valores numéricos
 # ==========================================================
+
 def parse_valor_robusto(v):
     if v is None:
         return 0.0
